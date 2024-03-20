@@ -3,7 +3,7 @@ use std::{fs::File, path::Path};
 
 use argh::FromArgs;
 use binrw::{BinReaderExt, BinWriterExt};
-use gvas_rs::suitebro::SuiteBro;
+use tower_suitebro::suitebro::SuiteBro;
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// Convert a save file to json

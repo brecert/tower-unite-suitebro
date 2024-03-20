@@ -121,21 +121,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gvas-rs"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argh",
- "binrw",
- "gvas",
- "indexmap",
- "quick-xml",
- "serde",
- "serde_json",
- "unreal_helpers",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -320,6 +305,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.53",
+]
+
+[[package]]
+name = "tower-suitebro"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argh",
+ "binrw",
+ "gvas",
+ "indexmap",
+ "quick-xml",
+ "serde",
+ "serde_json",
+ "unreal_helpers",
 ]
 
 [[package]]

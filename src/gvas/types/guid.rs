@@ -11,7 +11,7 @@ fn serialize_guid<S: Serializer>(guid: &Guid, serializer: S) -> Result<S::Ok, S:
 }
 
 #[binrw]
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct GUID(
     #[br(map = Guid)]
     #[bw(map = |x| x.0)]

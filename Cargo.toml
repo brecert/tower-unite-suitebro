@@ -1,5 +1,5 @@
 [package]
-name = "gvas-rs"
+name = "tower-suitebro"
 version = "0.1.0"
 edition = "2021"
 default-run = "tower-unite-save"

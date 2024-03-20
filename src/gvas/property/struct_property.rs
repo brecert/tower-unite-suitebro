@@ -1,5 +1,4 @@
 use binrw::{binrw, binwrite, BinRead};
-use indexmap::serde_seq::deserialize;
 use serde::{Deserialize, Serialize};
 
 use crate::byte_size::ByteSize;

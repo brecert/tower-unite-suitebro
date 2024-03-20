@@ -10,7 +10,7 @@ pub use self::fstring::FString;
 pub use self::guid::GUID;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Vector {
     pub x: f32,
     pub y: f32,
@@ -18,7 +18,7 @@ pub struct Vector {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct LinearColor {
     pub r: f32,
     pub g: f32,
@@ -27,7 +27,7 @@ pub struct LinearColor {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Quat {
     pub x: f32,
     pub y: f32,
@@ -36,7 +36,7 @@ pub struct Quat {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Rotator {
     pub pitch: f32,
     pub roll: f32,
