@@ -75,12 +75,38 @@ impl BinRead for PropertyType {
 
 // todo: debug inner value only?
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, PartialEq)]
 pub struct PropertyValue {
+    #[serde(skip_serializing)]
     pub property_type: FString,
     #[br(args_raw = property_type.clone())]
     #[serde(flatten)]
     pub value: PropertyType,
+}
+
+impl<'de> Deserialize<'de> for PropertyValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = PropertyType::deserialize(deserializer)?;
+        let property_type = match value {
+            PropertyType::StructProperty(_) => "StructProperty",
+            PropertyType::ArrayProperty(_) => "ArrayProperty",
+            PropertyType::StrProperty(_) => "StrProperty",
+            PropertyType::BoolProperty(_) => "BoolProperty",
+            PropertyType::IntProperty(_) => "IntProperty",
+            PropertyType::FloatProperty(_) => "FloatProperty",
+            PropertyType::NameProperty(_) => "NameProperty",
+            PropertyType::EnumProperty(_) => "EnumProperty",
+            PropertyType::ByteProperty(_) => "ByteProperty",
+            PropertyType::ObjectProperty(_) => "ObjectProperty",
+        };
+        Ok(PropertyValue {
+            value,
+            property_type: property_type.into(),
+        })
+    }
 }
 
 #[binrw]

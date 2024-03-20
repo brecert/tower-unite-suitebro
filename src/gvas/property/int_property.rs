@@ -5,6 +5,7 @@ use crate::byte_size::ByteSize;
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(transparent)]
 pub struct IntProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]
@@ -19,6 +20,7 @@ pub struct IntProperty {
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[serde(transparent)]
 pub struct FloatProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]
@@ -33,6 +35,7 @@ pub struct FloatProperty {
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[serde(transparent)]
 pub struct DoubleProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]

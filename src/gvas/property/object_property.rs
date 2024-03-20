@@ -5,6 +5,7 @@ use crate::{byte_size::ByteSize, gvas::types::FString};
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(transparent)]
 pub struct ObjectProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]

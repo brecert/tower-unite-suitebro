@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(transparent)]
 pub struct BoolProperty {
     #[br(temp, assert(size == 0))]
     #[bw(calc = 0)]

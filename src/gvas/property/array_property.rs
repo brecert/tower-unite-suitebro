@@ -19,7 +19,7 @@ pub struct ArrayStructProperty {
     #[bw(calc = self.values.byte_size() as u64)]
     pub struct_size: u64,
     pub struct_type: FString,
-    pub struct_guid: GUID,
+    pub guid: GUID,
     #[br(temp, assert(seperator == 0))]
     #[bw(calc = 0)]
     pub seperator: u8,
@@ -30,6 +30,7 @@ pub struct ArrayStructProperty {
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[br(import { count: usize })]
+#[serde(transparent)]
 pub struct ArrayBoolProperty {
     #[br(count = count)]
     pub values: Vec<Bool>,
@@ -38,6 +39,7 @@ pub struct ArrayBoolProperty {
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[br(import { count: usize })]
+#[serde(transparent)]
 pub struct ArrayStrProperty {
     #[br(count = count)]
     pub values: Vec<FString>,

@@ -1,9 +1,10 @@
 use binrw::{binrw, binwrite, BinRead};
+use indexmap::serde_seq::deserialize;
 use serde::{Deserialize, Serialize};
 
 use crate::byte_size::ByteSize;
 use crate::gvas::types::{FString, GUID};
-use crate::gvas::types::{LinearColor, Quat, Vector, Rotator};
+use crate::gvas::types::{LinearColor, Quat, Rotator, Vector};
 use crate::suitebro::property_map::PropertyMap;
 
 type SteamID = PropertyMap;
@@ -18,6 +19,7 @@ type SplineSaveData = PropertyMap;
 
 #[binwrite]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "struct_type", content = "value")]
 pub enum StructType {
     // todo: builtin types
     LinearColor(LinearColor),
@@ -41,21 +43,22 @@ pub enum StructType {
 impl StructType {
     pub fn type_name(&self) -> FString {
         match &self {
-            Self::LinearColor(_) => "LinearColor".into(),
-            Self::Quat(_) => "Quat".into(),
-            Self::Vector(_) => "Vector".into(),
-            Self::SteamID(_) => "SteamID".into(),
-            Self::PlayerTrustSaveData(_) => "PlayerTrustSaveData".into(),
-            Self::Colorable(_) => "Colorable".into(),
-            Self::ItemPhysics(_) => "ItemPhysics".into(),
-            Self::Transform(_) => "Transform".into(),
-            Self::ItemSpawnDefaults(_) => "ItemSpawnDefaults".into(),
-            Self::GUID(_) => "Guid".into(),
-            Self::WeatherManifestEntry(_) => "WeatherManifestEntry".into(),
-            Self::ItemConnectionData(_) => "ItemConnectionData".into(),
-            Self::SplineSaveData(_) => "SplineSaveData".into(),
-            Self::Rotator(_) => "Rotator".into(),
+            Self::LinearColor(_) => "LinearColor",
+            Self::Quat(_) => "Quat",
+            Self::Vector(_) => "Vector",
+            Self::SteamID(_) => "SteamID",
+            Self::PlayerTrustSaveData(_) => "PlayerTrustSaveData",
+            Self::Colorable(_) => "Colorable",
+            Self::ItemPhysics(_) => "ItemPhysics",
+            Self::Transform(_) => "Transform",
+            Self::ItemSpawnDefaults(_) => "ItemSpawnDefaults",
+            Self::GUID(_) => "Guid",
+            Self::WeatherManifestEntry(_) => "WeatherManifestEntry",
+            Self::ItemConnectionData(_) => "ItemConnectionData",
+            Self::SplineSaveData(_) => "SplineSaveData",
+            Self::Rotator(_) => "Rotator",
         }
+        .into()
     }
 }
 
@@ -103,6 +106,9 @@ pub struct StructProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]
     pub size: u64,
+    // might not always align but we're optimizing for usability not verbosity with potential accuracy
+    #[br(temp)]
+    #[bw(calc = self.value.type_name())]
     pub struct_type: FString,
     pub guid: GUID,
     #[br(temp, assert(seperator == 0))]
@@ -111,5 +117,6 @@ pub struct StructProperty {
     // pub key_name: FString,
     // #[br(args { ty: struct_type.as_str() })]
     #[br(args_raw = struct_type.clone())]
+    #[serde(flatten)]
     pub value: StructType,
 }
