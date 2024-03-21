@@ -137,6 +137,8 @@ namespace gvas {
                 ("IntPoint"): type::IntPoint;
                 ("Guid"): guid;
                 ("LinearColor"): type::LinearColor;
+                // unknown where this fits
+                ("WorkshopFile"): u64;
                 // custom types, while we could assume all custom types are PropertyMaps
                 // there are unreal types that are unaccounted for and we want better errors for those
                 ( "SteamID" 
@@ -167,6 +169,31 @@ namespace gvas {
             StructType<type_name.value>;
         };
 
+        enum ComponentType : u32 {
+            Empty,
+            RichText,
+            SimpleText
+        };
+
+        // ArrayProperty only?
+        struct TextProperty {
+            ComponentType type [[color("ff9933")]];
+            seperator;
+
+            match (type) {
+                (ComponentType::Empty): {
+                    util::error("Unhandled TextProperty type: {}", type);
+                }
+                (ComponentType::RichText): {
+                    util::error("Unhandled TextProperty type: {}", type);
+                }
+                (ComponentType::SimpleText): {
+                    u64 unk1;
+                    string;
+                }
+            }
+        };
+
         // // ArrayProperty is not supported in arrays
         struct ArrayProperty<auto WithHeader> {
             if (!WithHeader) {
@@ -195,6 +222,9 @@ namespace gvas {
                 }
                 ("BoolProperty"): {
                     bool properties[property_count];
+                }
+                ("TextProperty"): {
+                    TextProperty properties[property_count];
                 }
                 ("StrProperty"): {
                     string properties[property_count];
@@ -292,6 +322,12 @@ namespace suitebro {
         u32;
         u32;
     };
+
+    struct PropertySection {
+        gvas::string name;
+        gvas::property::PropertyMap properties;
+        u32;
+    };
     
     struct Item {
         gvas::string name;
@@ -304,7 +340,10 @@ namespace suitebro {
         
         gvas::property::PropertyMap properties;
         
-        u8 unk2[8] [[sealed]];
+        u32 unk1;
+        u32 unk2;
+
+        PropertySection p[unk2];
         
         gvas::type::Quat rotation;
         gvas::type::Vector position;
