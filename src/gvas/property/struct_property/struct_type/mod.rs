@@ -5,20 +5,22 @@ use crate::gvas::types::{FString, LinearColor, Quat, Rotator, Vector, GUID};
 use crate::suitebro::property_map::PropertyMap;
 
 pub mod colorable;
+pub mod transform;
 
-use colorable::Colorable;
+pub use colorable::Colorable;
+pub use transform::Transform;
 
-type WorkshopFile = u64;
+pub type WorkshopFile = u64;
 
-type SteamID = PropertyMap;
-type PlayerTrustSaveData = PropertyMap;
+pub type SteamID = PropertyMap;
+pub type PlayerTrustSaveData = PropertyMap;
 // type Colorable = PropertyMap;
-type ItemPhysics = PropertyMap;
-type Transform = PropertyMap;
-type ItemSpawnDefaults = PropertyMap;
-type WeatherManifestEntry = PropertyMap;
-type ItemConnectionData = PropertyMap;
-type SplineSaveData = PropertyMap;
+pub type ItemPhysics = PropertyMap;
+// pub type Transform = PropertyMap;
+pub type ItemSpawnDefaults = PropertyMap;
+pub type WeatherManifestEntry = PropertyMap;
+pub type ItemConnectionData = PropertyMap;
+pub type SplineSaveData = PropertyMap;
 
 #[binwrite]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
