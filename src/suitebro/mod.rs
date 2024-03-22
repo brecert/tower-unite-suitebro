@@ -12,8 +12,8 @@ pub mod property_map;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[brw(magic = b"suitebro")]
 pub struct Header {
-    pub unk_version_1: u32,
-    pub unk_version_2: u32,
+    pub format_version: u32,
+    pub unreal_version: u32,
 }
 
 // idk

@@ -319,8 +319,8 @@ namespace gvas {
 namespace suitebro {
     struct Header {
         type::Magic<"suitebro">;
-        u32 unk_version;
-        u32 unk_flags;
+        u32 format_version;
+        u32 unreal_version;
     };
 
     struct PropertySection {
