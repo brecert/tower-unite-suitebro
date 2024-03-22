@@ -19,6 +19,8 @@ pub struct ArrayStructProperty {
     #[bw(calc = self.values.byte_size() as u64)]
     pub struct_size: u64,
     pub struct_type: FString,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "GUID::is_zero")]
     pub guid: GUID,
     #[br(temp, assert(seperator == 0))]
     #[bw(calc = 0)]

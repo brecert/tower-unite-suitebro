@@ -18,3 +18,9 @@ pub struct GUID(
     #[serde(serialize_with = "serialize_guid")]
     pub Guid,
 );
+
+impl GUID {
+    pub fn is_zero(self: &Self) -> bool {
+        self.0.is_zero()
+    }
+}

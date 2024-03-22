@@ -16,6 +16,8 @@ type WeatherManifestEntry = PropertyMap;
 type ItemConnectionData = PropertyMap;
 type SplineSaveData = PropertyMap;
 
+type WorkshopFile = u64;
+
 #[binwrite]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "struct_type", content = "value")]
@@ -26,6 +28,9 @@ pub enum StructType {
     Vector(Vector),
     GUID(GUID),
     Rotator(Rotator),
+
+    // not sure where this fits
+    WorkshopFile(WorkshopFile),
 
     // custom types
     SteamID(SteamID),
@@ -56,6 +61,7 @@ impl StructType {
             Self::ItemConnectionData(_) => "ItemConnectionData",
             Self::SplineSaveData(_) => "SplineSaveData",
             Self::Rotator(_) => "Rotator",
+            Self::WorkshopFile(_) => "WorkshopFile",
         }
         .into()
     }
@@ -91,6 +97,7 @@ impl BinRead for StructType {
             "ItemConnectionData" => read_struct_type!(ItemConnectionData),
             "SplineSaveData" => read_struct_type!(SplineSaveData),
             "Rotator" => read_struct_type!(Rotator),
+            "WorkshopFile" => read_struct_type!(WorkshopFile),
             _ => Err(binrw::error::Error::AssertFail {
                 pos: reader.stream_position()?,
                 message: format!("No StructType variant for {:?}", args.0),
@@ -109,6 +116,8 @@ pub struct StructProperty {
     #[br(temp)]
     #[bw(calc = self.value.type_name())]
     pub struct_type: FString,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "GUID::is_zero")]
     pub guid: GUID,
     #[br(temp, assert(seperator == 0))]
     #[bw(calc = 0)]

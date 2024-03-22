@@ -32,6 +32,13 @@ pub struct PropertyList {
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct GroupInfo {
+    item_count: u32,
+    group_id: u32,
+}
+
+#[binrw]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct SuiteBro {
     pub header: Header,
     #[br(temp)]
@@ -45,8 +52,14 @@ pub struct SuiteBro {
     #[br(count = property_count)]
     pub properties: Vec<PropertyList>,
 
+    // attribute count?
     pub unk_1: u32,
-    pub unk_2: u32,
+
+    #[br(temp)]
+    #[bw(calc = groups.len() as u32)]
+    pub group_count: u32,
+    #[br(count = group_count)]
+    pub groups: Vec<GroupInfo>,
 }
 
 #[cfg(test)]
