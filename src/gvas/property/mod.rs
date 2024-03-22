@@ -14,15 +14,15 @@ pub mod object_property;
 pub mod str_property;
 pub mod struct_property;
 
-use self::array_property::ArrayProperty;
-use self::bool_property::BoolProperty;
-use self::byte_property::ByteProperty;
-use self::enum_property::EnumProperty;
-use self::int_property::{FloatProperty, IntProperty};
-use self::name_property::NameProperty;
-use self::object_property::ObjectProperty;
-use self::str_property::StrProperty;
-use self::struct_property::StructProperty;
+pub use self::array_property::ArrayProperty;
+pub use self::bool_property::BoolProperty;
+pub use self::byte_property::ByteProperty;
+pub use self::enum_property::EnumProperty;
+pub use self::int_property::{DoubleProperty, FloatProperty, IntProperty};
+pub use self::name_property::NameProperty;
+pub use self::object_property::ObjectProperty;
+pub use self::str_property::StrProperty;
+pub use self::struct_property::StructProperty;
 
 use crate::gvas::types::FString;
 

@@ -6,7 +6,7 @@ use crate::{
     gvas::types::{Bool, FString, GUID},
 };
 
-use super::struct_property::StructType;
+use super::struct_property::struct_type::StructType;
 
 #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
