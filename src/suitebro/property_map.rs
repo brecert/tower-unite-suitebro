@@ -3,7 +3,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::gvas::{
-    property::{Property, PropertyValue},
+    property::{Property, PropertyType},
     types::FString,
 };
 
@@ -16,7 +16,7 @@ pub struct PropertyList(
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct PropertyMap(
     // order matters, use indexmap
-    pub IndexMap<String, PropertyValue>,
+    pub IndexMap<String, PropertyType>,
 );
 
 impl BinRead for PropertyMap {

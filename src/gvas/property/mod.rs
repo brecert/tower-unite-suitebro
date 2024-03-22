@@ -1,5 +1,7 @@
-use binrw::BinRead;
-use binrw::{binrw, binwrite};
+use std::io;
+
+use binrw::binrw;
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
 pub mod array_property;
@@ -24,7 +26,6 @@ use self::struct_property::StructProperty;
 
 use crate::gvas::types::FString;
 
-#[binwrite]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum PropertyType {
     StructProperty(StructProperty),
@@ -39,10 +40,27 @@ pub enum PropertyType {
     ObjectProperty(ObjectProperty),
 }
 
-impl BinRead for PropertyType {
-    type Args<'a> = FString;
+impl PropertyType {
+    fn type_name(self: &Self) -> &'static str {
+        match self {
+            Self::StructProperty(_) => "StructProperty",
+            Self::ArrayProperty(_) => "ArrayProperty",
+            Self::StrProperty(_) => "StrProperty",
+            Self::BoolProperty(_) => "BoolProperty",
+            Self::IntProperty(_) => "IntProperty",
+            Self::FloatProperty(_) => "FloatProperty",
+            Self::NameProperty(_) => "NameProperty",
+            Self::EnumProperty(_) => "EnumProperty",
+            Self::ByteProperty(_) => "ByteProperty",
+            Self::ObjectProperty(_) => "ObjectProperty",
+        }
+    }
+}
 
-    fn read_options<R: std::io::Read + std::io::Seek>(
+impl BinRead for PropertyType {
+    type Args<'a> = ();
+
+    fn read_options<R: io::Read + io::Seek>(
         reader: &mut R,
         endian: binrw::Endian,
         args: Self::Args<'_>,
@@ -54,7 +72,9 @@ impl BinRead for PropertyType {
             }};
         }
 
-        match args.as_str() {
+        let property_type = FString::read_options(reader, endian, args)?;
+
+        match property_type.as_str() {
             "StructProperty" => read_property_type!(StructProperty),
             "ArrayProperty" => read_property_type!(ArrayProperty),
             "StrProperty" => read_property_type!(StrProperty),
@@ -67,45 +87,35 @@ impl BinRead for PropertyType {
             "ObjectProperty" => read_property_type!(ObjectProperty),
             _ => Err(binrw::error::Error::AssertFail {
                 pos: reader.stream_position()?,
-                message: format!("No PropertyType variant for {:?}", args.0),
+                message: format!("No PropertyType variant for {:?}", property_type),
             }),
         }
     }
 }
 
-// todo: debug inner value only?
-#[binrw]
-#[derive(Debug, Serialize, PartialEq)]
-pub struct PropertyValue {
-    #[serde(skip_serializing)]
-    pub property_type: FString,
-    #[br(args_raw = property_type.clone())]
-    #[serde(flatten)]
-    pub value: PropertyType,
-}
+// there are many ways to avoid implementing this manually but none as simple.
+impl BinWrite for PropertyType {
+    type Args<'a> = ();
 
-impl<'de> Deserialize<'de> for PropertyValue {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let value = PropertyType::deserialize(deserializer)?;
-        let property_type = match value {
-            PropertyType::StructProperty(_) => "StructProperty",
-            PropertyType::ArrayProperty(_) => "ArrayProperty",
-            PropertyType::StrProperty(_) => "StrProperty",
-            PropertyType::BoolProperty(_) => "BoolProperty",
-            PropertyType::IntProperty(_) => "IntProperty",
-            PropertyType::FloatProperty(_) => "FloatProperty",
-            PropertyType::NameProperty(_) => "NameProperty",
-            PropertyType::EnumProperty(_) => "EnumProperty",
-            PropertyType::ByteProperty(_) => "ByteProperty",
-            PropertyType::ObjectProperty(_) => "ObjectProperty",
-        };
-        Ok(PropertyValue {
-            value,
-            property_type: property_type.into(),
-        })
+    fn write_options<W: io::Write + io::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: (),
+    ) -> binrw::BinResult<()> {
+        FString::from(self.type_name()).write_options(writer, endian, args)?;
+        match self {
+            Self::StructProperty(property) => property.write_options(writer, endian, args),
+            Self::ArrayProperty(property) => property.write_options(writer, endian, args),
+            Self::StrProperty(property) => property.write_options(writer, endian, args),
+            Self::BoolProperty(property) => property.write_options(writer, endian, args),
+            Self::IntProperty(property) => property.write_options(writer, endian, args),
+            Self::FloatProperty(property) => property.write_options(writer, endian, args),
+            Self::NameProperty(property) => property.write_options(writer, endian, args),
+            Self::EnumProperty(property) => property.write_options(writer, endian, args),
+            Self::ByteProperty(property) => property.write_options(writer, endian, args),
+            Self::ObjectProperty(property) => property.write_options(writer, endian, args),
+        }
     }
 }
 
@@ -114,5 +124,5 @@ impl<'de> Deserialize<'de> for PropertyValue {
 pub struct Property {
     pub name: FString,
     #[br(if(name.as_str() != "None"))]
-    pub value: Option<PropertyValue>,
+    pub value: Option<PropertyType>,
 }
