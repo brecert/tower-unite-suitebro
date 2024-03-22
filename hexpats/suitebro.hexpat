@@ -359,6 +359,11 @@ namespace suitebro {
         util::Lit<u32, 0>;
     };
     
+    struct GroupInfo {
+        u32 item_count;
+        u32 group_id;
+    };
+    
     struct SuiteBro {
         Header header;
         
@@ -369,7 +374,8 @@ namespace suitebro {
         PropertyList properties[property_count];
 
         u32;
-        u32;
+        u32 group_count;
+        GroupInfo groups[group_count];
     };
 }
 
