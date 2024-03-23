@@ -1,7 +1,9 @@
+use std::io::BufWriter;
 use std::path::PathBuf;
 use std::{fs::File, path::Path};
 
 use argh::FromArgs;
+use binrw::io::BufReader;
 use binrw::{BinReaderExt, BinWriterExt};
 use tower_suitebro::suitebro::SuiteBro;
 
@@ -23,14 +25,17 @@ pub struct ToJSONArgs {
 }
 
 pub fn to_json(input: &Path, output: &Path, overwrite: bool) -> anyhow::Result<()> {
-    let mut input_file = File::open(&input)?;
-    let save: SuiteBro = input_file.read_le()?;
+    let input_file = File::open(&input)?;
+    let mut reader = BufReader::new(input_file);
+    let save: SuiteBro = reader.read_le()?;
 
     let output_file = match overwrite {
         true => File::create(&output)?,
         false => File::create_new(&output)?,
     };
-    serde_json::to_writer_pretty(&output_file, &save)?;
+    let writer = BufWriter::new(output_file);
+
+    serde_json::to_writer_pretty(writer, &save)?;
 
     Ok(())
 }
@@ -54,14 +59,16 @@ pub struct ToSaveArgs {
 
 pub fn from_json(input: &Path, output: &Path, overwrite: bool) -> anyhow::Result<()> {
     let input_file = File::open(&input)?;
-    let save: SuiteBro = serde_json::from_reader(&input_file)?;
+    let reader = BufReader::new(input_file);
+    let save: SuiteBro = serde_json::from_reader(reader)?;
 
-    let mut output_file = match overwrite {
+    let output_file = match overwrite {
         true => File::create(&output)?,
         false => File::create_new(&output)?,
     };
 
-    output_file.write_le(&save)?;
+    let mut writer = BufWriter::new(output_file);
+    writer.write_le(&save)?;
 
     Ok(())
 }
