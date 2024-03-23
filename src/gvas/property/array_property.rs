@@ -9,7 +9,6 @@ use crate::{
 use super::struct_property::struct_type::StructType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-// #[br(import { count: usize })]
 pub struct ArrayStructProperty {
     // todo: is this accurate?
     pub field_name: FString,
@@ -97,13 +96,44 @@ impl ByteSize for ArrayStructProperty {
     }
 }
 
-#[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[br(import(count: usize))]
 #[serde(transparent)]
 pub struct ArrayBoolProperty {
-    #[br(count = count)]
     pub values: Vec<Bool>,
+}
+
+impl BinRead for ArrayBoolProperty {
+    type Args<'a> = (usize,);
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        (count,): Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        Ok(Self {
+            values: <_>::read_options(
+                reader,
+                endian,
+                VecArgs {
+                    count: count,
+                    inner: (),
+                },
+            )?,
+        })
+    }
+}
+
+impl BinWrite for ArrayBoolProperty {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        self.values.write_options(writer, endian, args)
+    }
 }
 
 impl ByteSize for ArrayBoolProperty {
@@ -112,13 +142,44 @@ impl ByteSize for ArrayBoolProperty {
     }
 }
 
-#[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[br(import(count: usize))]
 #[serde(transparent)]
 pub struct ArrayStrProperty {
-    #[br(count = count)]
     pub values: Vec<FString>,
+}
+
+impl BinRead for ArrayStrProperty {
+    type Args<'a> = (usize,);
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        (count,): Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        Ok(Self {
+            values: <_>::read_options(
+                reader,
+                endian,
+                VecArgs {
+                    count: count,
+                    inner: (),
+                },
+            )?,
+        })
+    }
+}
+
+impl BinWrite for ArrayStrProperty {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        self.values.write_options(writer, endian, args)
+    }
 }
 
 impl ByteSize for ArrayStrProperty {
