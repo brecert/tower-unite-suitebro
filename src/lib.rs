@@ -1,5 +1,3 @@
-#![feature(specialization)]
-
 pub mod byte_size;
 pub mod gvas;
 pub mod suitebro;

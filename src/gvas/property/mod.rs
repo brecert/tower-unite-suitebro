@@ -1,6 +1,5 @@
 use std::io;
 
-use binrw::binrw;
 use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
@@ -138,10 +137,43 @@ impl ByteSize for PropertyType {
     }
 }
 
-#[binrw]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Property {
     pub name: FString,
-    #[br(if(name.as_str() != "None"))]
     pub value: Option<PropertyType>,
+}
+
+impl BinRead for Property {
+    type Args<'a> = ();
+
+    fn read_options<R: io::prelude::Read + io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        let name = FString::read_options(reader, endian, args)?;
+        let value = if name.as_str() != "None" {
+            Some(PropertyType::read_options(reader, endian, args)?)
+        } else {
+            None
+        };
+        Ok(Self { name, value })
+    }
+}
+
+impl BinWrite for Property {
+    type Args<'a> = ();
+
+    fn write_options<W: io::prelude::Write + io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        self.name.write_options(writer, endian, args)?;
+        if let Some(value) = &self.value {
+            value.write_options(writer, endian, args)?;
+        }
+        Ok(())
+    }
 }

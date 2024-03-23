@@ -11,9 +11,7 @@ use self::{item::Item, property_map::PropertyMap};
 pub mod item;
 pub mod property_map;
 
-// #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-// #[brw(magic = b"suitebro")]
 pub struct Header {
     pub format_version: u32,
     pub unreal_version: u32,

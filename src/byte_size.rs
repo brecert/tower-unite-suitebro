@@ -1,6 +1,4 @@
-use std::{io::Cursor, marker::PhantomData};
-
-use binrw::BinWrite;
+use std::marker::PhantomData;
 
 pub trait StaticByteSize {
     const BYTE_SIZE: usize;

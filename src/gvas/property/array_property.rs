@@ -6,7 +6,7 @@ use crate::{
     gvas::types::{Bool, FString, GUID},
 };
 
-use super::struct_property::struct_type::{self, StructType};
+use super::struct_property::struct_type::StructType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 // #[br(import { count: usize })]
@@ -14,17 +14,10 @@ pub struct ArrayStructProperty {
     // todo: is this accurate?
     pub field_name: FString,
     pub value_type: FString, // todo: assert same as ty
-    // #[br(temp)]
-    // #[bw(calc = self.values.byte_size() as u64)]
-    // pub struct_size: u64,
     pub struct_type: FString,
     #[serde(default)]
     #[serde(skip_serializing_if = "GUID::is_zero")]
     pub guid: GUID,
-    // #[br(temp, assert(seperator == 0))]
-    // #[bw(calc = 0)]
-    // pub seperator: u8,
-    // #[br(args { count: count, inner: struct_type.clone() })]
     pub values: Vec<StructType>,
 }
 
@@ -52,7 +45,7 @@ impl BinRead for ArrayStructProperty {
         )?;
 
         assert_eq!(seperator, 0);
-        assert_eq!(array_size, value_type.byte_size() as u64);
+        assert_eq!(array_size, values.byte_size() as u64);
         assert!(values.iter().all(|value| value.type_name() == struct_type));
 
         Ok(Self {
