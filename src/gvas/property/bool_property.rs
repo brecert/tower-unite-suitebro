@@ -2,7 +2,7 @@ use binrw::binrw;
 use serde::{Deserialize, Serialize};
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(transparent)]
 pub struct BoolProperty {
     #[br(temp, assert(size == 0))]

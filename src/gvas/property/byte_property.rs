@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{byte_size::ByteSize, gvas::types::FString};
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ByteProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]

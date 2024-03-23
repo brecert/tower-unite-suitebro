@@ -8,13 +8,37 @@ use crate::suitebro::property_map::PropertyMap;
 use super::StructType;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[br(map = |a: PropertyMap| a.try_into().unwrap() )]
 #[bw(map = |a| PropertyMap::from(a))]
 pub struct Transform {
     pub rotation: Quat,
     pub translation: Vector,
     pub scale: Vector,
+}
+
+impl<'a> From<&'a PropertyType> for &'a StructProperty {
+    fn from(value: &'a PropertyType) -> Self {
+        match value {
+            PropertyType::StructProperty(value) => value,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> From<&'a StructProperty> for &'a StructType {
+    fn from(value: &'a StructProperty) -> Self {
+        &value.value
+    }
+}
+
+impl<'a> From<&'a StructType> for &'a Quat {
+    fn from(value: &'a StructType) -> Self {
+        match value {
+            StructType::Quat(value) => value,
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl From<&Transform> for PropertyMap {

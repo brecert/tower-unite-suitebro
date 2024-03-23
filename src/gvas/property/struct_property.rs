@@ -8,7 +8,7 @@ pub mod struct_type;
 use struct_type::StructType;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct StructProperty {
     #[br(temp)]
     #[bw(calc = self.value.byte_size() as u64)]

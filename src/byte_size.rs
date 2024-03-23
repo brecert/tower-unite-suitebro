@@ -62,12 +62,14 @@ impl<T: for<'a> BinWrite<Args<'a> = ()>> ByteSize for T {
 //     }
 // }
 
-// macro impl_static_size($ty:ty, $size:literal) {
-//     impl ByteSize for $ty {
-//         fn byte_size(&self) -> usize {
-//             $size
+// macro_rules! impl_static_size {
+//     ($ty:ty, $size:literal) => {
+//         impl ByteSize for $ty {
+//             fn byte_size(&self) -> usize {
+//                 $size
+//             }
 //         }
-//     }
+//     };
 // }
 
 // impl_static_size!(i8, 1);

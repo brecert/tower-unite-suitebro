@@ -26,7 +26,7 @@ pub use self::struct_property::StructProperty;
 
 use crate::gvas::types::FString;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PropertyType {
     StructProperty(StructProperty),
     ArrayProperty(ArrayProperty),

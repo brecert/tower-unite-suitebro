@@ -23,7 +23,7 @@ pub type ItemConnectionData = PropertyMap;
 pub type SplineSaveData = PropertyMap;
 
 #[binwrite]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "struct_type", content = "value")]
 pub enum StructType {
     // todo: builtin types

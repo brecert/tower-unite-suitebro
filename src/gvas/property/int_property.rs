@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::byte_size::ByteSize;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(transparent)]
 pub struct IntProperty {
     #[br(temp)]
@@ -19,7 +19,7 @@ pub struct IntProperty {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd)]
 #[serde(transparent)]
 pub struct FloatProperty {
     #[br(temp)]
@@ -34,7 +34,7 @@ pub struct FloatProperty {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd)]
 #[serde(transparent)]
 pub struct DoubleProperty {
     #[br(temp)]

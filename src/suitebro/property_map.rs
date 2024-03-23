@@ -13,7 +13,7 @@ pub struct PropertyList(
     #[br(parse_with = until(|property: &Property| property.value.is_none()))] Vec<Property>,
 );
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct PropertyMap(
     // order matters, use indexmap
     pub IndexMap<String, PropertyType>,

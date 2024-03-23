@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{byte_size::ByteSize, gvas::types::FString};
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(transparent)]
 pub struct ObjectProperty {
     #[br(temp)]

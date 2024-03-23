@@ -8,7 +8,7 @@ use crate::suitebro::property_map::PropertyMap;
 use super::StructType;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[br(map = |a: PropertyMap| a.try_into().unwrap() )]
 #[bw(map = |a| PropertyMap::from(a))]
 pub struct Colorable {

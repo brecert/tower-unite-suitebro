@@ -9,7 +9,7 @@ use crate::{
 use super::struct_property::struct_type::StructType;
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[br(import { count: usize })]
 pub struct ArrayStructProperty {
     // todo: is this accurate?
@@ -30,7 +30,7 @@ pub struct ArrayStructProperty {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[br(import { count: usize })]
 #[serde(transparent)]
 pub struct ArrayBoolProperty {
@@ -39,7 +39,7 @@ pub struct ArrayBoolProperty {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[br(import { count: usize })]
 #[serde(transparent)]
 pub struct ArrayStrProperty {
@@ -48,7 +48,7 @@ pub struct ArrayStrProperty {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[br(import { count: usize, ty: FString })]
 pub enum ArrayValue {
     #[br(pre_assert(ty.as_str() == "StructProperty"))]
@@ -80,7 +80,7 @@ impl ArrayValue {
 }
 
 #[binrw]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ArrayProperty {
     #[br(temp)]
     #[bw(calc = 4 + self.value.byte_size() as u64)]
