@@ -7,16 +7,16 @@ use crate::suitebro::property_map::PropertyMap;
 pub mod colorable;
 pub mod transform;
 
-pub use colorable::Colorable;
-pub use transform::Transform;
+// pub use colorable::Colorable;
+// pub use transform::Transform;
 
 pub type WorkshopFile = u64;
 
 pub type SteamID = PropertyMap;
 pub type PlayerTrustSaveData = PropertyMap;
-// type Colorable = PropertyMap;
+pub type Colorable = PropertyMap;
 pub type ItemPhysics = PropertyMap;
-// pub type Transform = PropertyMap;
+pub type Transform = PropertyMap;
 pub type ItemSpawnDefaults = PropertyMap;
 pub type WeatherManifestEntry = PropertyMap;
 pub type ItemConnectionData = PropertyMap;
