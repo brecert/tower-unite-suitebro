@@ -1,4 +1,4 @@
-use binrw::{binrw, until, BinRead, BinWrite};
+use binrw::{BinRead, BinWrite};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -10,11 +10,30 @@ use crate::{
     },
 };
 
-#[binrw]
 #[derive(Debug, Default)]
-pub struct PropertyList(
-    #[br(parse_with = until(|property: &Property| property.value.is_none()))] Vec<Property>,
-);
+pub struct PropertyList(Vec<Property>);
+
+impl BinRead for PropertyList {
+    type Args<'a> = ();
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        let mut properties = vec![];
+
+        loop {
+            let property = Property::read_options(reader, endian, args)?;
+            if property.value.is_none() {
+                break;
+            }
+            properties.push(property);
+        }
+
+        Ok(PropertyList(properties))
+    }
+}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct PropertyMap(

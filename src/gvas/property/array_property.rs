@@ -99,7 +99,7 @@ impl ByteSize for ArrayStructProperty {
 
 #[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[br(import { count: usize })]
+#[br(import(count: usize))]
 #[serde(transparent)]
 pub struct ArrayBoolProperty {
     #[br(count = count)]
@@ -114,7 +114,7 @@ impl ByteSize for ArrayBoolProperty {
 
 #[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[br(import { count: usize })]
+#[br(import(count: usize))]
 #[serde(transparent)]
 pub struct ArrayStrProperty {
     #[br(count = count)]
@@ -127,18 +127,11 @@ impl ByteSize for ArrayStrProperty {
     }
 }
 
-#[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[br(import { count: usize, ty: FString })]
 pub enum ArrayValue {
-    #[br(pre_assert(ty.as_str() == "StructProperty"))]
-    StructProperty(#[br(args(count))] ArrayStructProperty),
-
-    #[br(pre_assert(ty.as_str() == "BoolProperty"))]
-    BoolProperty(#[br(args { count })] ArrayBoolProperty),
-
-    #[br(pre_assert(ty.as_str() == "StrProperty"))]
-    StrProperty(#[br(args {count })] ArrayStrProperty),
+    StructProperty(ArrayStructProperty),
+    BoolProperty(ArrayBoolProperty),
+    StrProperty(ArrayStrProperty),
 }
 
 impl ArrayValue {
@@ -159,6 +152,43 @@ impl ArrayValue {
     }
 }
 
+impl BinRead for ArrayValue {
+    type Args<'a> = (usize, FString);
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        (count, ty): Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        let value = match ty.as_str() {
+            "StructProperty" => Self::StructProperty(<_>::read_options(reader, endian, (count,))?),
+            "BoolProperty" => Self::BoolProperty(<_>::read_options(reader, endian, (count,))?),
+            "StrProperty" => Self::StrProperty(<_>::read_options(reader, endian, (count,))?),
+            _ => Err(binrw::Error::NoVariantMatch {
+                pos: reader.stream_position()?,
+            })?,
+        };
+        Ok(value)
+    }
+}
+
+impl BinWrite for ArrayValue {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        match self {
+            Self::StructProperty(value) => value.write_options(writer, endian, args),
+            Self::BoolProperty(value) => value.write_options(writer, endian, args),
+            Self::StrProperty(value) => value.write_options(writer, endian, args),
+        }
+    }
+}
+
 impl ByteSize for ArrayValue {
     fn byte_size(&self) -> usize {
         match self {
@@ -169,32 +199,58 @@ impl ByteSize for ArrayValue {
     }
 }
 
-#[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ArrayProperty {
-    #[br(temp)]
-    #[bw(calc = 4 + self.value.byte_size() as u64)]
-    pub size: u64,
-    #[br(temp)]
-    #[bw(calc = value.type_name())]
-    pub array_type: FString,
-    #[br(temp, assert(seperator == 0))]
-    #[bw(calc = 0)]
-    pub seperator: u8,
-    #[br(temp)]
-    #[bw(calc = value.count() as u32)]
-    pub array_len: u32,
-    #[br(args { count: array_len as usize, ty: array_type.clone() })]
-    #[serde(flatten)]
-    pub value: ArrayValue,
+pub struct ArrayProperty(ArrayValue);
+
+impl BinRead for ArrayProperty {
+    type Args<'a> = ();
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        let _size = u64::read_options(reader, endian, args)?;
+        let array_type = FString::read_options(reader, endian, args)?;
+        let seperator = u8::read_options(reader, endian, args)?;
+        let count = u32::read_options(reader, endian, args)?;
+        let value = ArrayValue::read_options(reader, endian, (count as usize, array_type))?;
+
+        // todo: assert size
+        assert_eq!(seperator, 0);
+
+        Ok(ArrayProperty(value))
+    }
+}
+
+impl BinWrite for ArrayProperty {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        let size = 4 + self.0.byte_size() as u64;
+        let array_type = self.0.type_name();
+        let seperator = 0u8;
+        let count = self.0.count() as u32;
+
+        size.write_options(writer, endian, args)?;
+        array_type.write_options(writer, endian, args)?;
+        seperator.write_options(writer, endian, args)?;
+        count.write_options(writer, endian, args)?;
+        self.0.write_options(writer, endian, args)
+    }
 }
 
 impl ByteSize for ArrayProperty {
     fn byte_size(&self) -> usize {
         u64::BYTE_SIZE
-            + self.value.type_name().byte_size()
+            + self.0.type_name().byte_size()
             + u8::BYTE_SIZE
             + u32::BYTE_SIZE
-            + self.value.byte_size()
+            + self.0.byte_size()
     }
 }

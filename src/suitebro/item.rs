@@ -1,4 +1,4 @@
-use binrw::{binrw, BinRead, BinWrite, VecArgs};
+use binrw::{BinRead, BinWrite, VecArgs};
 use serde::{Deserialize, Serialize};
 
 use crate::gvas::types::{FString, Quat, Vector, GUID};
@@ -23,15 +23,11 @@ fn default_unreal_version() -> u32 {
 
 const TINYRICK_MAGIC: &[u8; 8] = b"tinyrick";
 
-// #[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
-// #[brw(magic = b"tinyrick")]
 pub struct TinyRick {
-    /// may be some kind of version
     #[serde(skip_serializing)]
     #[serde(default = "default_format_version")]
     pub format_version: u32,
-    /// may be some kind of version
     #[serde(skip_serializing)]
     #[serde(default = "default_unreal_version")]
     pub unreal_version: u32,
@@ -41,10 +37,6 @@ pub struct TinyRick {
     // another count?
     pub unk_count: u32,
 
-    // #[br(temp)]
-    // #[bw(calc = property_sections.len() as u32)]
-    // pub property_section_count: u32,
-    // #[br(count = property_section_count)]
     pub property_sections: Vec<PropertySection>,
 
     pub rotation: Quat,
@@ -161,12 +153,42 @@ impl BinWrite for PropertySection {
     }
 }
 
-#[binrw]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub struct Items {
-    #[br(temp)]
-    #[bw(calc = items.len() as u32)]
-    pub count: u32,
-    #[br(count = count)]
-    pub items: Vec<Item>,
+pub struct Items(Vec<Item>);
+
+impl BinRead for Items {
+    type Args<'a> = ();
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        let count = u32::read_options(reader, endian, args)?;
+        let items = <Vec<Item>>::read_options(
+            reader,
+            endian,
+            VecArgs {
+                count: count as usize,
+                inner: (),
+            },
+        )?;
+        Ok(Self(items))
+    }
+}
+
+impl BinWrite for Items {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        let count = self.0.len() as u32;
+
+        count.write_options(writer, endian, args)?;
+        self.0.write_options(writer, endian, args)
+    }
 }
