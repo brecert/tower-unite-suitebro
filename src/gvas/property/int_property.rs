@@ -1,49 +1,56 @@
-use binrw::binrw;
+use crate::byte_size::StaticByteSize;
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
-use crate::byte_size::ByteSize;
+macro_rules! number_property {
+    ($name:ident, $type:ty) => {
+        #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd)]
+        #[serde(transparent)]
+        pub struct $name($type);
 
-#[binrw]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(transparent)]
-pub struct IntProperty {
-    #[br(temp)]
-    #[bw(calc = self.value.byte_size() as u64)]
-    pub size: u64,
+        impl BinRead for $name {
+            type Args<'a> = ();
 
-    #[br(temp, assert(seperator == 0))]
-    #[bw(calc = 0)]
-    pub seperator: u8,
+            fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+                reader: &mut R,
+                endian: binrw::Endian,
+                args: Self::Args<'_>,
+            ) -> binrw::prelude::BinResult<Self> {
+                let size = u64::read_options(reader, endian, args)?;
+                let seperator = u8::read_options(reader, endian, args)?;
+                let value = <$type>::read_options(reader, endian, args)?;
 
-    pub value: i32,
+                assert!(size == <$type>::BYTE_SIZE as u64);
+                assert!(seperator == 0);
+
+                Ok(Self(value))
+            }
+        }
+
+        impl BinWrite for $name {
+            type Args<'a> = ();
+
+            fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+                &self,
+                writer: &mut W,
+                endian: binrw::Endian,
+                args: Self::Args<'_>,
+            ) -> binrw::prelude::BinResult<()> {
+                let size = <$type>::BYTE_SIZE as u64;
+                let seperator = 0u8;
+
+                size.write_options(writer, endian, args)?;
+                seperator.write_options(writer, endian, args)?;
+                self.0.write_options(writer, endian, args)
+            }
+        }
+
+        impl StaticByteSize for $name {
+            const BYTE_SIZE: usize = <$type>::BYTE_SIZE;
+        }
+    };
 }
 
-#[binrw]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct FloatProperty {
-    #[br(temp)]
-    #[bw(calc = self.value.byte_size() as u64)]
-    pub size: u64,
-
-    #[br(temp, assert(seperator == 0))]
-    #[bw(calc = 0)]
-    pub seperator: u8,
-
-    pub value: f32,
-}
-
-#[binrw]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct DoubleProperty {
-    #[br(temp)]
-    #[bw(calc = self.value.byte_size() as u64)]
-    pub size: u64,
-
-    #[br(temp, assert(seperator == 0))]
-    #[bw(calc = 0)]
-    pub seperator: u8,
-
-    pub value: f64,
-}
+number_property!(IntProperty, i32);
+number_property!(FloatProperty, f32);
+number_property!(DoubleProperty, f64);

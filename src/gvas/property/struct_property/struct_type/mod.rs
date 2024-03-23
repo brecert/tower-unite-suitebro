@@ -1,11 +1,12 @@
 use binrw::{binwrite, BinRead};
 use serde::{Deserialize, Serialize};
 
+use crate::byte_size::ByteSize;
 use crate::gvas::types::{FString, LinearColor, Quat, Rotator, Vector, GUID};
 use crate::suitebro::property_map::PropertyMap;
 
-pub mod colorable;
-pub mod transform;
+// pub mod colorable;
+// pub mod transform;
 
 // pub use colorable::Colorable;
 // pub use transform::Transform;
@@ -21,6 +22,7 @@ pub type ItemSpawnDefaults = PropertyMap;
 pub type WeatherManifestEntry = PropertyMap;
 pub type ItemConnectionData = PropertyMap;
 pub type SplineSaveData = PropertyMap;
+pub type SkyVolumeSettings = PropertyMap;
 
 #[binwrite]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -46,6 +48,7 @@ pub enum StructType {
     WeatherManifestEntry(WeatherManifestEntry),
     ItemConnectionData(ItemConnectionData),
     SplineSaveData(SplineSaveData),
+    SkyVolumeSettings(SkyVolumeSettings),
 }
 
 impl StructType {
@@ -66,6 +69,7 @@ impl StructType {
             Self::SplineSaveData(_) => "SplineSaveData",
             Self::Rotator(_) => "Rotator",
             Self::WorkshopFile(_) => "WorkshopFile",
+            Self::SkyVolumeSettings(_) => "SkyVolumeSettings",
         }
         .into()
     }
@@ -102,10 +106,34 @@ impl BinRead for StructType {
             "SplineSaveData" => read_struct_type!(SplineSaveData),
             "Rotator" => read_struct_type!(Rotator),
             "WorkshopFile" => read_struct_type!(WorkshopFile),
+            "SkyVolumeSettings" => read_struct_type!(SkyVolumeSettings),
             _ => Err(binrw::error::Error::AssertFail {
                 pos: reader.stream_position()?,
                 message: format!("No StructType variant for {:?}", args.0),
             }),
+        }
+    }
+}
+
+impl ByteSize for StructType {
+    fn byte_size(&self) -> usize {
+        match self {
+            Self::LinearColor(value) => value.byte_size(),
+            Self::Quat(value) => value.byte_size(),
+            Self::Vector(value) => value.byte_size(),
+            Self::SteamID(value) => value.byte_size(),
+            Self::PlayerTrustSaveData(value) => value.byte_size(),
+            Self::Colorable(value) => value.byte_size(),
+            Self::ItemPhysics(value) => value.byte_size(),
+            Self::Transform(value) => value.byte_size(),
+            Self::ItemSpawnDefaults(value) => value.byte_size(),
+            Self::GUID(value) => value.byte_size(),
+            Self::WeatherManifestEntry(value) => value.byte_size(),
+            Self::ItemConnectionData(value) => value.byte_size(),
+            Self::SplineSaveData(value) => value.byte_size(),
+            Self::Rotator(value) => value.byte_size(),
+            Self::WorkshopFile(value) => value.byte_size(),
+            Self::SkyVolumeSettings(value) => value.byte_size(),
         }
     }
 }

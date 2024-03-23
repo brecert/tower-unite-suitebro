@@ -50,11 +50,42 @@ pub struct TinyRick {
     pub scale: Vector,
 }
 
-#[derive(BinRead, BinWrite, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct PropertySection {
     pub name: FString,
     pub properties: PropertyMap,
     pub unk: u32,
+}
+
+impl BinRead for PropertySection {
+    type Args<'a> = ();
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        Ok(Self {
+            name: <_>::read_options(reader, endian, args)?,
+            properties: <_>::read_options(reader, endian, args)?,
+            unk: <_>::read_options(reader, endian, args)?,
+        })
+    }
+}
+
+impl BinWrite for PropertySection {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        self.name.write_options(writer, endian, args)?;
+        self.properties.write_options(writer, endian, args)?;
+        self.unk.write_options(writer, endian, args)
+    }
 }
 
 #[binrw]

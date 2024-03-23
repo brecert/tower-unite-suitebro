@@ -1,31 +1,71 @@
-use binrw::binrw;
+use std::io;
+
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
-use crate::byte_size::ByteSize;
+use crate::byte_size::{ByteSize, StaticByteSize};
 use crate::gvas::types::{FString, GUID};
 
 pub mod struct_type;
 use struct_type::StructType;
 
-#[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct StructProperty {
-    #[br(temp)]
-    #[bw(calc = self.value.byte_size() as u64)]
-    pub size: u64,
-    // might not always align but we're optimizing for usability not verbosity with potential accuracy
-    #[br(temp)]
-    #[bw(calc = self.value.type_name())]
-    pub struct_type: FString,
     #[serde(default)]
     #[serde(skip_serializing_if = "GUID::is_zero")]
     pub guid: GUID,
-    #[br(temp, assert(seperator == 0))]
-    #[bw(calc = 0)]
-    pub seperator: u8,
-    // pub key_name: FString,
-    // #[br(args { ty: struct_type.as_str() })]
-    #[br(args_raw = struct_type.clone())]
     #[serde(flatten)]
     pub value: StructType,
+}
+
+impl BinRead for StructProperty {
+    type Args<'a> = ();
+
+    fn read_options<R: io::Read + io::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::BinResult<Self> {
+        // todo: use for transmuting for performance
+        let _size = u64::read_options(reader, endian, args)?;
+        let struct_type = FString::read_options(reader, endian, args)?;
+        let guid = GUID::read_options(reader, endian, args)?;
+        let _seperator = u8::read_options(reader, endian, args)?;
+        assert!(_seperator == 0);
+        let value = StructType::read_options(reader, endian, struct_type)?;
+
+        Ok(StructProperty { guid, value })
+    }
+}
+
+impl BinWrite for StructProperty {
+    type Args<'a> = ();
+
+    fn write_options<W: io::Write + io::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::BinResult<()> {
+        let size = self.value.byte_size() as u64;
+        let struct_type = self.value.type_name();
+        let seperator = 0u8;
+
+        size.write_options(writer, endian, args)?;
+        struct_type.write_options(writer, endian, args)?;
+        self.guid.write_options(writer, endian, args)?;
+        seperator.write_options(writer, endian, args)?;
+        self.value.write_options(writer, endian, args)?;
+        Ok(())
+    }
+}
+
+impl ByteSize for StructProperty {
+    fn byte_size(&self) -> usize {
+        u64::BYTE_SIZE
+            + self.value.type_name().byte_size()
+            + self.guid.byte_size()
+            + u8::BYTE_SIZE
+            + self.value.byte_size()
+    }
 }

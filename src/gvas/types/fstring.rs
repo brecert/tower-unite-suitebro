@@ -2,6 +2,8 @@ use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use unreal_helpers::{UnrealReadExt, UnrealWriteExt};
 
+use crate::byte_size::{ByteSize, StaticByteSize};
+
 #[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FString(
     /// The raw byte string.
@@ -11,10 +13,6 @@ pub struct FString(
 impl FString {
     pub fn as_str(&self) -> &str {
         &self.0
-        // match &self.0 {
-        //     Some(value) => value.as_str(),
-        //     None => return "",
-        // }
     }
 }
 impl BinRead for FString {
@@ -60,6 +58,23 @@ impl BinWrite for FString {
                     err: Box::new(error),
                 })
             }
+        }
+    }
+}
+
+impl ByteSize for FString {
+    fn byte_size(&self) -> usize {
+        let string = &self.0;
+        let is_unicode = string.len() != string.chars().count();
+
+        if string.len() == 0 {
+            i32::BYTE_SIZE
+        } else if is_unicode {
+            let utf16 = string.encode_utf16().collect::<Vec<_>>();
+            let (_, aligned, _) = unsafe { utf16.align_to::<u8>() };
+            i32::BYTE_SIZE + aligned.len()
+        } else {
+            i32::BYTE_SIZE + string.as_bytes().len() + 1
         }
     }
 }

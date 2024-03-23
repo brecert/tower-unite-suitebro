@@ -2,9 +2,12 @@ use binrw::{binrw, until, BinRead, BinWrite};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-use crate::gvas::{
-    property::{Property, PropertyType},
-    types::FString,
+use crate::{
+    byte_size::ByteSize,
+    gvas::{
+        property::{Property, PropertyType},
+        types::FString,
+    },
 };
 
 #[binrw]
@@ -55,5 +58,15 @@ impl BinWrite for PropertyMap {
         FString::from("None").write_options(writer, endian, ())?;
 
         Ok(())
+    }
+}
+
+impl ByteSize for PropertyMap {
+    fn byte_size(&self) -> usize {
+        self.0
+            .iter()
+            .map(|(key, property)| FString::from(key.as_str()).byte_size() + property.byte_size())
+            .sum::<usize>()
+            + FString::from("None").byte_size()
     }
 }

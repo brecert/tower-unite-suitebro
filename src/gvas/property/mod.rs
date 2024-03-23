@@ -24,6 +24,7 @@ pub use self::object_property::ObjectProperty;
 pub use self::str_property::StrProperty;
 pub use self::struct_property::StructProperty;
 
+use crate::byte_size::ByteSize;
 use crate::gvas::types::FString;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -107,7 +108,7 @@ impl BinWrite for PropertyType {
         match self {
             Self::StructProperty(property) => property.write_options(writer, endian, args),
             Self::ArrayProperty(property) => property.write_options(writer, endian, args),
-            Self::StrProperty(property) => property.write_options(writer, endian, args),
+            Self::StrProperty(property) => (*property).write_options(writer, endian, args),
             Self::BoolProperty(property) => property.write_options(writer, endian, args),
             Self::IntProperty(property) => property.write_options(writer, endian, args),
             Self::FloatProperty(property) => property.write_options(writer, endian, args),
@@ -115,6 +116,23 @@ impl BinWrite for PropertyType {
             Self::EnumProperty(property) => property.write_options(writer, endian, args),
             Self::ByteProperty(property) => property.write_options(writer, endian, args),
             Self::ObjectProperty(property) => property.write_options(writer, endian, args),
+        }
+    }
+}
+
+impl ByteSize for PropertyType {
+    fn byte_size(&self) -> usize {
+        match self {
+            Self::StructProperty(property) => property.byte_size(),
+            Self::ArrayProperty(property) => property.byte_size(),
+            Self::StrProperty(property) => property.byte_size(),
+            Self::BoolProperty(property) => property.byte_size(),
+            Self::IntProperty(property) => property.byte_size(),
+            Self::FloatProperty(property) => property.byte_size(),
+            Self::NameProperty(property) => property.byte_size(),
+            Self::EnumProperty(property) => property.byte_size(),
+            Self::ByteProperty(property) => property.byte_size(),
+            Self::ObjectProperty(property) => property.byte_size(),
         }
     }
 }

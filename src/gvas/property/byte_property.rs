@@ -1,7 +1,10 @@
 use binrw::binrw;
 use serde::{Deserialize, Serialize};
 
-use crate::{byte_size::ByteSize, gvas::types::FString};
+use crate::{
+    byte_size::{ByteSize, StaticByteSize},
+    gvas::types::FString,
+};
 
 #[binrw]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -15,4 +18,10 @@ pub struct ByteProperty {
     seperator: u8,
     #[br(count = size)]
     value: Vec<u8>,
+}
+
+impl ByteSize for ByteProperty {
+    fn byte_size(&self) -> usize {
+        u64::BYTE_SIZE + self.name.byte_size() + u8::BYTE_SIZE + self.value.byte_size()
+    }
 }

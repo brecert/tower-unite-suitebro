@@ -3,6 +3,8 @@ use std::io::{Read, Seek, Write};
 use binrw::{BinRead, BinResult, BinWrite, Endian};
 use serde::{Deserialize, Serialize};
 
+use crate::byte_size::StaticByteSize;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Deserialize, Serialize)]
 pub struct Bool(pub bool);
 
@@ -29,4 +31,8 @@ impl BinWrite for Bool {
     ) -> BinResult<()> {
         (self.0 as u8).write_options(writer, endian, ())
     }
+}
+
+impl StaticByteSize for Bool {
+    const BYTE_SIZE: usize = u8::BYTE_SIZE;
 }
