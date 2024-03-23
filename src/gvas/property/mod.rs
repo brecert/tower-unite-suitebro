@@ -122,18 +122,19 @@ impl BinWrite for PropertyType {
 
 impl ByteSize for PropertyType {
     fn byte_size(&self) -> usize {
-        match self {
-            Self::StructProperty(property) => property.byte_size(),
-            Self::ArrayProperty(property) => property.byte_size(),
-            Self::StrProperty(property) => property.byte_size(),
-            Self::BoolProperty(property) => property.byte_size(),
-            Self::IntProperty(property) => property.byte_size(),
-            Self::FloatProperty(property) => property.byte_size(),
-            Self::NameProperty(property) => property.byte_size(),
-            Self::EnumProperty(property) => property.byte_size(),
-            Self::ByteProperty(property) => property.byte_size(),
-            Self::ObjectProperty(property) => property.byte_size(),
-        }
+        FString::from(self.type_name()).byte_size()
+            + match self {
+                Self::StructProperty(property) => property.byte_size(),
+                Self::ArrayProperty(property) => property.byte_size(),
+                Self::StrProperty(property) => property.byte_size(),
+                Self::BoolProperty(property) => property.byte_size(),
+                Self::IntProperty(property) => property.byte_size(),
+                Self::FloatProperty(property) => property.byte_size(),
+                Self::NameProperty(property) => property.byte_size(),
+                Self::EnumProperty(property) => property.byte_size(),
+                Self::ByteProperty(property) => property.byte_size(),
+                Self::ObjectProperty(property) => property.byte_size(),
+            }
     }
 }
 

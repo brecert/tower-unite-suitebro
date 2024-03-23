@@ -1,4 +1,4 @@
-use binrw::{binrw, BinRead, BinWrite};
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
 pub mod bool;
@@ -53,7 +53,6 @@ pub struct Vector {
 impl_static_size_struct!(Vector { f32, f32, f32 });
 impl_basic_struct_rw!(Vector { x, y, z });
 
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct LinearColor {
     pub r: f32,
@@ -65,7 +64,6 @@ pub struct LinearColor {
 impl_static_size_struct!(LinearColor { f32, f32, f32, f32 });
 impl_basic_struct_rw!(LinearColor { r, g, b, a });
 
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Quat {
     pub x: f32,
@@ -76,7 +74,6 @@ pub struct Quat {
 
 impl_static_size_struct!(Quat { f32, f32, f32, f32 });
 impl_basic_struct_rw!(Quat { x, y, z, w });
-
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Rotator {

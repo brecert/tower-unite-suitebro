@@ -1,8 +1,8 @@
-use binrw::{binrw, BinRead, BinWrite};
+use binrw::{BinRead, BinWrite};
 use gvas::types::Guid;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::byte_size::{ByteSize, StaticByteSize};
+use crate::byte_size::StaticByteSize;
 
 fn serialize_guid<S: Serializer>(guid: &Guid, serializer: S) -> Result<S::Ok, S::Error> {
     if guid.is_zero() {

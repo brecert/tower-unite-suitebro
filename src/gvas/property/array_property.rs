@@ -51,7 +51,8 @@ impl BinRead for ArrayStructProperty {
             },
         )?;
 
-        assert!(seperator == 0);
+        assert_eq!(seperator, 0);
+        assert_eq!(array_size, value_type.byte_size() as u64);
         assert!(values.iter().all(|value| value.type_name() == struct_type));
 
         Ok(Self {

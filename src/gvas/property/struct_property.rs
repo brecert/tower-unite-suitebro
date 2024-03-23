@@ -27,12 +27,14 @@ impl BinRead for StructProperty {
         args: Self::Args<'_>,
     ) -> binrw::BinResult<Self> {
         // todo: use for transmuting for performance
-        let _size = u64::read_options(reader, endian, args)?;
+        let size = u64::read_options(reader, endian, args)?;
         let struct_type = FString::read_options(reader, endian, args)?;
         let guid = GUID::read_options(reader, endian, args)?;
-        let _seperator = u8::read_options(reader, endian, args)?;
-        assert!(_seperator == 0);
+        let seperator = u8::read_options(reader, endian, args)?;
         let value = StructType::read_options(reader, endian, struct_type)?;
+            
+        assert_eq!(size, value.byte_size() as u64);
+        assert_eq!(seperator, 0);
 
         Ok(StructProperty { guid, value })
     }

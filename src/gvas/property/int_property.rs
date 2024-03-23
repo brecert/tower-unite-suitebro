@@ -20,8 +20,8 @@ macro_rules! number_property {
                 let seperator = u8::read_options(reader, endian, args)?;
                 let value = <$type>::read_options(reader, endian, args)?;
 
-                assert!(size == <$type>::BYTE_SIZE as u64);
-                assert!(seperator == 0);
+                assert_eq!(size, <$type>::BYTE_SIZE as u64);
+                assert_eq!(seperator, 0);
 
                 Ok(Self(value))
             }
@@ -46,7 +46,7 @@ macro_rules! number_property {
         }
 
         impl StaticByteSize for $name {
-            const BYTE_SIZE: usize = <$type>::BYTE_SIZE;
+            const BYTE_SIZE: usize = u64::BYTE_SIZE + u8::BYTE_SIZE + <$type>::BYTE_SIZE;
         }
     };
 }

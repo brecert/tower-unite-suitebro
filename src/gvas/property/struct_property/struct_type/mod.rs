@@ -1,4 +1,4 @@
-use binrw::{binwrite, BinRead};
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
 use crate::byte_size::ByteSize;
@@ -24,7 +24,6 @@ pub type ItemConnectionData = PropertyMap;
 pub type SplineSaveData = PropertyMap;
 pub type SkyVolumeSettings = PropertyMap;
 
-#[binwrite]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "struct_type", content = "value")]
 pub enum StructType {
@@ -111,6 +110,36 @@ impl BinRead for StructType {
                 pos: reader.stream_position()?,
                 message: format!("No StructType variant for {:?}", args.0),
             }),
+        }
+    }
+}
+
+impl BinWrite for StructType {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        match self {
+            Self::LinearColor(value) => value.write_options(writer, endian, args),
+            Self::Quat(value) => value.write_options(writer, endian, args),
+            Self::Vector(value) => value.write_options(writer, endian, args),
+            Self::SteamID(value) => value.write_options(writer, endian, args),
+            Self::PlayerTrustSaveData(value) => value.write_options(writer, endian, args),
+            Self::Colorable(value) => value.write_options(writer, endian, args),
+            Self::ItemPhysics(value) => value.write_options(writer, endian, args),
+            Self::Transform(value) => value.write_options(writer, endian, args),
+            Self::ItemSpawnDefaults(value) => value.write_options(writer, endian, args),
+            Self::GUID(value) => value.write_options(writer, endian, args),
+            Self::WeatherManifestEntry(value) => value.write_options(writer, endian, args),
+            Self::ItemConnectionData(value) => value.write_options(writer, endian, args),
+            Self::SplineSaveData(value) => value.write_options(writer, endian, args),
+            Self::Rotator(value) => value.write_options(writer, endian, args),
+            Self::WorkshopFile(value) => value.write_options(writer, endian, args),
+            Self::SkyVolumeSettings(value) => value.write_options(writer, endian, args),
         }
     }
 }

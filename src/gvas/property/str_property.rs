@@ -1,7 +1,10 @@
 use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 
-use crate::{byte_size::ByteSize, gvas::types::FString};
+use crate::{
+    byte_size::{ByteSize, StaticByteSize},
+    gvas::types::FString,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(transparent)]
@@ -46,6 +49,6 @@ impl BinWrite for StrProperty {
 
 impl ByteSize for StrProperty {
     fn byte_size(&self) -> usize {
-        self.0.byte_size()
+        u64::BYTE_SIZE + u8::BYTE_SIZE + self.0.byte_size()
     }
 }

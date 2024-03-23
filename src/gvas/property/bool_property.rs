@@ -17,10 +17,10 @@ impl BinRead for BoolProperty {
     ) -> binrw::prelude::BinResult<Self> {
         let size = u64::read_options(reader, endian, args)?;
         let value = Bool::read_options(reader, endian, args)?.0;
-        let indicator = u8::read_options(reader, endian, args)?;
+        let seperator = u8::read_options(reader, endian, args)?;
 
-        assert!(size == 0);
-        assert!(indicator == 0);
+        assert_eq!(size, 0);
+        assert_eq!(seperator, 0);
 
         Ok(Self(value))
     }
@@ -35,10 +35,12 @@ impl BinWrite for BoolProperty {
         endian: binrw::Endian,
         args: Self::Args<'_>,
     ) -> binrw::prelude::BinResult<()> {
-        Bool(self.0).write_options(writer, endian, args)
+        0u64.write_options(writer, endian, args)?;
+        Bool(self.0).write_options(writer, endian, args)?;
+        0u8.write_options(writer, endian, args)
     }
 }
 
 impl StaticByteSize for BoolProperty {
-    const BYTE_SIZE: usize = u8::BYTE_SIZE;
+    const BYTE_SIZE: usize = u64::BYTE_SIZE + u8::BYTE_SIZE + u8::BYTE_SIZE;
 }
