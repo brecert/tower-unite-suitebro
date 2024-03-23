@@ -1,4 +1,4 @@
-use binrw::{binrw, BinRead, BinWrite, VecArgs};
+use binrw::{BinRead, BinWrite, VecArgs};
 use serde::{Deserialize, Serialize};
 
 use crate::{

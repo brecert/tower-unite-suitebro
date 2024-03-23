@@ -4,13 +4,46 @@ use serde::{Deserialize, Serialize};
 use crate::gvas::types::{FString, Quat, Vector, GUID};
 use crate::suitebro::property_map::PropertyMap;
 
-#[derive(BinRead, BinWrite, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Item {
     pub name: FString,
     pub guid: GUID,
     pub unk1: GUID,
     #[serde(flatten)]
     pub tinyrick: TinyRick,
+}
+
+impl BinRead for Item {
+    type Args<'a> = ();
+
+    fn read_options<R: std::io::prelude::Read + std::io::prelude::Seek>(
+        reader: &mut R,
+        endian: binrw::Endian,
+        _args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<Self> {
+        Ok(Self {
+            name: <_>::read_options(reader, endian, ())?,
+            guid: <_>::read_options(reader, endian, ())?,
+            unk1: <_>::read_options(reader, endian, ())?,
+            tinyrick: <_>::read_options(reader, endian, ())?,
+        })
+    }
+}
+
+impl BinWrite for Item {
+    type Args<'a> = ();
+
+    fn write_options<W: std::io::prelude::Write + std::io::prelude::Seek>(
+        &self,
+        writer: &mut W,
+        endian: binrw::Endian,
+        args: Self::Args<'_>,
+    ) -> binrw::prelude::BinResult<()> {
+        self.name.write_options(writer, endian, args)?;
+        self.guid.write_options(writer, endian, args)?;
+        self.unk1.write_options(writer, endian, args)?;
+        self.tinyrick.write_options(writer, endian, args)
+    }
 }
 
 fn default_format_version() -> u32 {
