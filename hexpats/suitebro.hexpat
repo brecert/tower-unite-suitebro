@@ -3,6 +3,7 @@ import std.mem;
 import type.magic;
 import type.guid;
 
+
 namespace util {
     bool DISPLAY_DEBUG_BYTES in;
 
@@ -335,14 +336,7 @@ namespace suitebro {
         u32;
     };
     
-    struct Item {
-        gvas::string name;
-        gvas::guid guid;
-        u32 unk_has_state;
-        u64 steam_item_id;
-        u32 tinyrick_size;
-        u128 expected_end = $ + tinyrick_size; 
-        
+    struct TinyRick {
         type::Magic<"tinyrick">;
         u32 format_version;
         u32 unreal_version;
@@ -350,14 +344,29 @@ namespace suitebro {
         gvas::property::PropertyMap properties;
         
         u32 unk1;
-        u32 unk2;
+        u32 property_section_count;
 
-        PropertySection p[unk2];
+        PropertySection property_sections[property_section_count];
+    };
+    
+    struct Item {
+        gvas::string name;
+        gvas::guid guid;
+        u32 unk_has_state;
+        u64 steam_item_id;
         
-        if ($ != expected_end) {
-            util::warn("tinyrick size was expected to end at {}, found end at {} instead", expected_end, $);
-            $ = expected_end;
+        if (unk_has_state > 0) {
+            u32 tinyrick_size;
+            u128 expected_end = $ + tinyrick_size;
+        
+            TinyRick tinyrick;
+        
+            if ($ != expected_end) {
+                util::warn("tinyrick size was expected to end at {}, found end at {} instead", expected_end, $);
+                $ = expected_end;
+            }
         }
+        
         
         gvas::type::Quat rotation;
         gvas::type::Vector position;

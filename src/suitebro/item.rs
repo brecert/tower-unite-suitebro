@@ -1,16 +1,58 @@
+use std::io::Cursor;
+
 use binrw::{BinRead, BinWrite, VecArgs};
 use serde::{Deserialize, Serialize};
 
+use crate::byte_size::{ByteSize, StaticByteSize};
 use crate::gvas::types::{FString, Quat, Vector, GUID};
 use crate::suitebro::property_map::PropertyMap;
+
+trait AdjustErrorPos {
+    fn adjust_error_pos(self, offset: u64) -> Self;
+}
+
+impl AdjustErrorPos for binrw::error::Error {
+    fn adjust_error_pos(self, offset: u64) -> Self {
+        use binrw::Error::*;
+        let offset = offset as u64;
+
+        match self {
+            BadMagic { pos, found } => BadMagic {
+                pos: offset + pos,
+                found,
+            },
+            AssertFail { pos, message } => AssertFail {
+                pos: offset + pos,
+                message,
+            },
+            Custom { pos, err } => Custom {
+                pos: offset + pos,
+                err,
+            },
+            NoVariantMatch { pos } => NoVariantMatch { pos: offset + pos },
+            EnumErrors {
+                pos,
+                variant_errors,
+            } => EnumErrors {
+                pos: offset + pos,
+                variant_errors,
+            },
+            a => a,
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Item {
     pub name: FString,
     pub guid: GUID,
-    pub unk1: GUID,
+    pub unk_has_state: u32,
+    pub steam_item_id: u64,
     #[serde(flatten)]
-    pub tinyrick: TinyRick,
+    pub tinyrick: Option<TinyRick>,
+    pub rotation: Quat,
+    pub position: Vector,
+    pub scale: Vector,
 }
 
 impl BinRead for Item {
@@ -21,11 +63,46 @@ impl BinRead for Item {
         endian: binrw::Endian,
         _args: Self::Args<'_>,
     ) -> binrw::prelude::BinResult<Self> {
+        let name = FString::read_options(reader, endian, ())?;
+        let guid = GUID::read_options(reader, endian, ())?;
+        let unk_has_state = u32::read_options(reader, endian, ())?;
+        let steam_item_id = u64::read_options(reader, endian, ())?;
+
+        let tinyrick = if unk_has_state != 0 {
+            let tinyrick_size = u32::read_options(reader, endian, ())?;
+            let mut tinyrick_data = vec![0u8; tinyrick_size as usize];
+            reader.read_exact(&mut tinyrick_data)?;
+            let mut cursor = Cursor::new(tinyrick_data);
+            let tinyrick = TinyRick::read_options(&mut cursor, endian, ()).map_err(|error| {
+                let offset = reader.stream_position().unwrap() - tinyrick_size as u64;
+                error.adjust_error_pos(offset)
+            })?;
+
+            if tinyrick_size as u64 != cursor.position() {
+                println!(
+                    "Warning: Garbage data detected at 0x{:x}",
+                    reader.stream_position()?
+                )
+            }
+
+            Some(tinyrick)
+        } else {
+            None
+        };
+
+        let rotation = Quat::read_options(reader, endian, ())?;
+        let position = Vector::read_options(reader, endian, ())?;
+        let scale = Vector::read_options(reader, endian, ())?;
+
         Ok(Self {
-            name: <_>::read_options(reader, endian, ())?,
-            guid: <_>::read_options(reader, endian, ())?,
-            unk1: <_>::read_options(reader, endian, ())?,
-            tinyrick: <_>::read_options(reader, endian, ())?,
+            name,
+            guid,
+            unk_has_state,
+            steam_item_id,
+            tinyrick,
+            rotation,
+            position,
+            scale,
         })
     }
 }
@@ -39,10 +116,17 @@ impl BinWrite for Item {
         endian: binrw::Endian,
         args: Self::Args<'_>,
     ) -> binrw::prelude::BinResult<()> {
+        let tinyrick_size = self.tinyrick.byte_size() as u32;
+
         self.name.write_options(writer, endian, args)?;
         self.guid.write_options(writer, endian, args)?;
-        self.unk1.write_options(writer, endian, args)?;
-        self.tinyrick.write_options(writer, endian, args)
+        self.unk_has_state.write_options(writer, endian, args)?;
+        self.steam_item_id.write_options(writer, endian, args)?;
+        tinyrick_size.write_options(writer, endian, args)?;
+        self.tinyrick.write_options(writer, endian, args)?;
+        self.rotation.write_options(writer, endian, args)?;
+        self.position.write_options(writer, endian, args)?;
+        self.scale.write_options(writer, endian, args)
     }
 }
 
@@ -71,10 +155,6 @@ pub struct TinyRick {
     pub unk_count: u32,
 
     pub property_sections: Vec<PropertySection>,
-
-    pub rotation: Quat,
-    pub position: Vector,
-    pub scale: Vector,
 }
 
 impl BinRead for TinyRick {
@@ -85,7 +165,6 @@ impl BinRead for TinyRick {
         endian: binrw::Endian,
         args: Self::Args<'_>,
     ) -> binrw::prelude::BinResult<Self> {
-        // magic
         let magic = <[u8; 8]>::read_options(reader, endian, args)?;
 
         if &magic != TINYRICK_MAGIC {
@@ -100,17 +179,18 @@ impl BinRead for TinyRick {
         let properties = PropertyMap::read_options(reader, endian, args)?;
         let unk_count = u32::read_options(reader, endian, args)?;
         let property_section_count = u32::read_options(reader, endian, args)?;
-        let property_sections = <Vec<PropertySection>>::read_options(
-            reader,
-            endian,
-            VecArgs {
-                count: property_section_count as usize,
-                inner: (),
-            },
-        )?;
-        let rotation = Quat::read_options(reader, endian, args)?;
-        let position = Vector::read_options(reader, endian, args)?;
-        let scale = Vector::read_options(reader, endian, args)?;
+        let property_sections = if property_section_count > 0 {
+            <Vec<PropertySection>>::read_options(
+                reader,
+                endian,
+                VecArgs {
+                    count: property_section_count as usize,
+                    inner: (),
+                },
+            )?
+        } else {
+            vec![]
+        };
 
         Ok(Self {
             format_version,
@@ -118,9 +198,6 @@ impl BinRead for TinyRick {
             unk_count,
             properties,
             property_sections,
-            rotation,
-            position,
-            scale,
         })
     }
 }
@@ -142,9 +219,19 @@ impl BinWrite for TinyRick {
         self.properties.write_options(writer, endian, args)?;
         self.unk_count.write_options(writer, endian, args)?;
         property_section_count.write_options(writer, endian, args)?;
-        self.rotation.write_options(writer, endian, args)?;
-        self.position.write_options(writer, endian, args)?;
-        self.scale.write_options(writer, endian, args)
+        self.property_sections.write_options(writer, endian, args)
+    }
+}
+
+impl ByteSize for TinyRick {
+    fn byte_size(&self) -> usize {
+        TINYRICK_MAGIC.byte_size()
+            + self.format_version.byte_size()
+            + self.unreal_version.byte_size()
+            + self.properties.byte_size()
+            + self.unk_count.byte_size()
+            + u32::BYTE_SIZE
+            + self.property_sections.byte_size()
     }
 }
 
@@ -183,6 +270,12 @@ impl BinWrite for PropertySection {
         self.name.write_options(writer, endian, args)?;
         self.properties.write_options(writer, endian, args)?;
         self.unk.write_options(writer, endian, args)
+    }
+}
+
+impl ByteSize for PropertySection {
+    fn byte_size(&self) -> usize {
+        self.name.byte_size() + self.properties.byte_size() + self.unk.byte_size()
     }
 }
 
