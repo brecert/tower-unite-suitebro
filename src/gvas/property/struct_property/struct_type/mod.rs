@@ -23,6 +23,7 @@ pub type WeatherManifestEntry = PropertyMap;
 pub type ItemConnectionData = PropertyMap;
 pub type SplineSaveData = PropertyMap;
 pub type SkyVolumeSettings = PropertyMap;
+pub type PostProcessVolumeSettings = PropertyMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "struct_type", content = "value")]
@@ -48,6 +49,7 @@ pub enum StructType {
     ItemConnectionData(ItemConnectionData),
     SplineSaveData(SplineSaveData),
     SkyVolumeSettings(SkyVolumeSettings),
+    PostProcessVolumeSettings(PostProcessVolumeSettings),
 }
 
 impl StructType {
@@ -69,6 +71,7 @@ impl StructType {
             Self::Rotator(_) => "Rotator",
             Self::WorkshopFile(_) => "WorkshopFile",
             Self::SkyVolumeSettings(_) => "SkyVolumeSettings",
+            Self::PostProcessVolumeSettings(_) => "PostProcessVolumeSettings",
         }
         .into()
     }
@@ -106,6 +109,7 @@ impl BinRead for StructType {
             "Rotator" => read_struct_type!(Rotator),
             "WorkshopFile" => read_struct_type!(WorkshopFile),
             "SkyVolumeSettings" => read_struct_type!(SkyVolumeSettings),
+            "PostProcessVolumeSettings" => read_struct_type!(PostProcessVolumeSettings),
             _ => Err(binrw::error::Error::AssertFail {
                 pos: reader.stream_position()?,
                 message: format!("No StructType variant for {:?}", args.0),
@@ -140,6 +144,7 @@ impl BinWrite for StructType {
             Self::Rotator(value) => value.write_options(writer, endian, args),
             Self::WorkshopFile(value) => value.write_options(writer, endian, args),
             Self::SkyVolumeSettings(value) => value.write_options(writer, endian, args),
+            Self::PostProcessVolumeSettings(value) => value.write_options(writer, endian, args),
         }
     }
 }
@@ -163,6 +168,7 @@ impl ByteSize for StructType {
             Self::Rotator(value) => value.byte_size(),
             Self::WorkshopFile(value) => value.byte_size(),
             Self::SkyVolumeSettings(value) => value.byte_size(),
+            Self::PostProcessVolumeSettings(value) => value.byte_size(),
         }
     }
 }
