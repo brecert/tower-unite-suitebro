@@ -6,6 +6,12 @@ import type.guid;
 namespace util {
     bool DISPLAY_DEBUG_BYTES in;
 
+    fn warn(str fmt, auto ... args) {
+        str message = builtin::std::format(fmt, args);
+        str error = std::format("$[{:#04x}] WARN: {}", $, message);
+        return std::print(error);
+    };
+
     fn error(str fmt, auto ... args) {
         str message = builtin::std::format(fmt, args);
         str error = std::format("$[{:#04x}] ERROR: {}", $, message);
@@ -332,11 +338,14 @@ namespace suitebro {
     struct Item {
         gvas::string name;
         gvas::guid guid;
-        u8 unk[16] [[sealed]];
+        u32 unk_has_state;
+        u64 steam_item_id;
+        u32 tinyrick_size;
+        u128 expected_end = $ + tinyrick_size; 
         
         type::Magic<"tinyrick">;
-        u32;
-        u32;
+        u32 format_version;
+        u32 unreal_version;
         
         gvas::property::PropertyMap properties;
         
@@ -344,6 +353,11 @@ namespace suitebro {
         u32 unk2;
 
         PropertySection p[unk2];
+        
+        if ($ != expected_end) {
+            util::warn("tinyrick size was expected to end at {}, found end at {} instead", expected_end, $);
+            $ = expected_end;
+        }
         
         gvas::type::Quat rotation;
         gvas::type::Vector position;
