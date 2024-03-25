@@ -1,8 +1,9 @@
+#pragma pattern_limit 10000000
+
 import std.core;
 import std.mem;
 import type.magic;
 import type.guid;
-
 
 namespace util {
     bool DISPLAY_DEBUG_BYTES in;
@@ -115,6 +116,14 @@ namespace gvas {
                 string value;
             }
         };
+        
+        struct ObjectProperty<auto WithHeader> {
+            if (WithHeader) {
+                u64 size;
+                seperator;
+            }
+            string value;
+        };
 
         // Numbers
         struct NumberProperty<auto Name, T, auto WithHeader> {
@@ -156,6 +165,9 @@ namespace gvas {
                 | "Colorable"
                 | "WeatherManifestEntry"
                 | "ItemConnectionData"
+                | "LaserProjectionIndex"
+                | "NPCWearables"
+                | "PostProcessVolumeSettings"
                 ): PropertyMap;
                 // unknown
                 (_): {
@@ -236,8 +248,11 @@ namespace gvas {
                 ("StrProperty"): {
                     string properties[property_count];
                 }
+                ("ObjectProperty"): {
+                    string properties[property_count];
+                }
                 (_): {
-                    util::error("Unhandled ArayProperty type: {}", type);
+                    util::error("Unhandled ArrayProperty type: {}", type);
                 }
             }
         };
@@ -275,14 +290,6 @@ namespace gvas {
             
             u8 value[size];
         };
-        
-        struct ObjectProperty<auto WithHeader> {
-            if (WithHeader) {
-                u64 size;
-                seperator;
-            }
-            string value;
-        };
 
         // Property
 
@@ -298,6 +305,7 @@ namespace gvas {
                 ("EnumProperty"): EnumProperty;
                 ("ByteProperty"): ByteProperty<WithHeader>;
                 ("ObjectProperty"): ObjectProperty<WithHeader>;
+                ("TextProperty"): TextProperty;
                 (_): util::error("Unhandled PropertyType: {}", Type);
             }
         };
@@ -362,7 +370,7 @@ namespace suitebro {
             TinyRick tinyrick;
         
             if ($ != expected_end) {
-                util::warn("tinyrick size was expected to end at {}, found end at {} instead", expected_end, $);
+                util::warn("{} size was expected to end at {}, found end at {} instead", name, expected_end, $);
                 $ = expected_end;
             }
         }
