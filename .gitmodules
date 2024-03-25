@@ -1,0 +1,3 @@
+[submodule "uesave-rs"]
+	path = uesave-rs
+	url = https://github.com/brecert/uesave-rs.git
