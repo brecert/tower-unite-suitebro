@@ -3,34 +3,42 @@
 pub mod byte_size;
 pub mod suitebro;
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::suitebro::SuiteBro;
-//     use binrw::BinReaderExt;
-//     use std::error::Error;
-//     use std::io::Cursor;
+#[cfg(test)]
+mod tests {
+    use crate::suitebro::{SuiteBro, get_tower_types};
+    use std::error::Error;
+    use std::io::Cursor;
+    use uesave::{Readable, Writable};
 
-//     macro_rules! test_serialization {
-//         ($name:ident, $ty:ty, $input:expr) => {
-//             #[test]
-//             fn $name() -> Result<(), Box<dyn Error>> {
-//                 let input = $input;
-//                 let mut reader = Cursor::new(&input);
-//                 let value: $ty = reader.read_le()?;
+    macro_rules! test_rw {
+        ($name:ident, $ty:ty, $input:expr) => {
+            #[test]
+            fn $name() -> Result<(), Box<dyn Error>> {
+                let input = $input;
+                let mut reader = Cursor::new(&input);
 
-//                 let json = serde_json::to_string(&value)?;
-//                 let deserialized: $ty = serde_json::from_str(&json)?;
+                let mut output = vec![];
+                let mut writer = Cursor::new(&mut output);
+                let value =
+                    uesave::Context::run_with_types(&get_tower_types(), &mut reader, |ctx| {
+                        <$ty as Readable<_>>::read(ctx)
+                    })
+                    .expect("error reading");
+                uesave::Context::run_with_types(&get_tower_types(), &mut writer, |ctx| {
+                    <$ty as Writable<_>>::write(&value, ctx)
+                })
+                .expect("error writing");
 
-//                 assert_eq!(value, deserialized);
+                assert_eq!(&input[..], &output[..]);
 
-//                 Ok(())
-//             }
-//         };
-//     }
+                Ok(())
+            }
+        };
+    }
 
-//     test_serialization!(
-//         test_serialize_suitbro,
-//         SuiteBro,
-//         include_bytes!("../assets/OneItem")
-//     );
-// }
+    test_rw!(
+        test_serialize_suitbro,
+        SuiteBro,
+        include_bytes!("../assets/OneItem")
+    );
+}
