@@ -10,6 +10,7 @@ pub mod item;
 
 const SUITEBRO_MAGIC: &[u8; 8] = b"suitebro";
 
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct SuiteBro {
     pub header: Header,
     pub items: Vec<Item>,
