@@ -7,8 +7,6 @@ use uesave::{
     Properties, Quat, Readable, Vector, Writable,
 };
 
-use super::PropertyList;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Item {
     pub name: String,
@@ -25,14 +23,12 @@ pub struct Item {
 
 impl<R: Read + Seek> Readable<R> for Item {
     fn read(reader: &mut uesave::Context<R>) -> uesave::TResult<Self> {
-        let name = uesave::read_string(reader)?;
+        let name = uesave::read_string(reader)?;        
         let guid = uuid::Uuid::read(reader)?;
         let unk_has_state = reader.read_u32::<LE>()? != 0;
         let steam_item_id = reader.read_u64::<LE>()?;
-
         let tinyrick = if unk_has_state {
             let tinyrick_size = reader.read_u32::<LE>()?;
-
             let mut buf = vec![0u8; tinyrick_size as usize];
             reader.read_exact(&mut buf)?;
 
@@ -91,7 +87,7 @@ pub struct TinyRick {
     // never seen above 0, we'll have be 0 for now
     // it could also be the ending like for other property lists..
     // pub unk_count: u32,
-    pub property_sections: Vec<PropertyList>,
+    pub actors: Vec<ActorInfo>,
 }
 
 impl<R: Read + Seek> Readable<R> for TinyRick {
@@ -108,13 +104,13 @@ impl<R: Read + Seek> Readable<R> for TinyRick {
         let properties = read_properties_until_none(reader)?;
         let _unknown_count = reader.read_u32::<LE>()?;
         let actor_count = reader.read_u32::<LE>()?;
-        let actors = read_array(actor_count, reader, PropertyList::read)?;
-
+        let actors = read_array(actor_count, reader, ActorInfo::read)?;
+        
         Ok(TinyRick {
             format_version,
             unreal_version,
             properties,
-            property_sections: actors,
+            actors,
         })
     }
 }
@@ -126,10 +122,34 @@ impl<R: Write + Seek> Writable<R> for TinyRick {
         writer.write_u32::<LE>(self.unreal_version)?;
         write_properties_none_terminated(writer, &self.properties)?;
         writer.write_u32::<LE>(0)?; // unknown count
-        writer.write_u32::<LE>(self.property_sections.len() as u32)?;
-        for actor in &self.property_sections {
+        writer.write_u32::<LE>(self.actors.len() as u32)?;
+        for actor in &self.actors {
             actor.write(writer)?;
         }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct ActorInfo {
+	name: String,
+	properties: Properties
+}
+
+impl<R: Read + Seek> Readable<R> for ActorInfo {
+    fn read(reader: &mut uesave::Context<R>) -> uesave::TResult<Self> {
+        let name = uesave::read_string(reader)?;
+        let properties = uesave::read_properties_until_none(reader)?;
+        debug_assert_eq!(reader.read_u32::<LE>()?, 0);
+        Ok(ActorInfo { name, properties })
+    }
+}
+
+impl<W: Write + Seek> Writable<W> for ActorInfo {
+    fn write(&self, writer: &mut uesave::Context<W>) -> uesave::TResult<()> {
+        uesave::write_string(writer, &self.name)?;
+				uesave::write_properties_none_terminated(writer, &self.properties)?;
+				writer.write_u32::<LE>(0)?; // unknown seperator
         Ok(())
     }
 }

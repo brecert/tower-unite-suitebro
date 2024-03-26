@@ -53,7 +53,7 @@ impl<R: Write + Seek> Writable<R> for SuiteBro {
         writer.write_u32::<LE>(self.groups.len() as u32)?;
         for group in &self.groups {
             group.write(writer)?;
-        }   
+        }
         Ok(())
     }
 }
@@ -159,8 +159,7 @@ impl<R: Write + Seek> Writable<R> for GroupInfo {
 }
 
 pub fn get_tower_types() -> Types {
-    let types = Types::new();
-    types
+    Types::new()
 }
 
 #[cfg(test)]

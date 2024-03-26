@@ -1,10 +1,10 @@
-use std::io::{BufReader, BufWriter};
+use std::io::{BufReader, BufWriter, Seek};
 use std::path::PathBuf;
 use std::{fs::File, path::Path};
 
 use argh::FromArgs;
-use uesave::{Readable, Writable};
 use tower_suitebro::suitebro::{get_tower_types, SuiteBro};
+use uesave::{Readable, SeekReader, Writable};
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// Convert a save file to json
@@ -26,7 +26,12 @@ pub struct ToJSONArgs {
 pub fn to_json(input: &Path, output: &Path, overwrite: bool) -> anyhow::Result<()> {
     let input_file = File::open(&input)?;
     let mut reader = BufReader::new(input_file);
-    let save = uesave::Context::run_with_types(&get_tower_types(), &mut reader, SuiteBro::read)?;
+    let mut reader = SeekReader::new(&mut reader);
+    let save = uesave::Context::run_with_types(&get_tower_types(), &mut reader, SuiteBro::read)
+        .map_err(|e| uesave::ParseError {
+            offset: reader.stream_position().unwrap() as usize, // our own implemenation which cannot fail
+            error: e,
+        })?;
 
     let output_file = match overwrite {
         true => File::create(&output)?,
@@ -67,7 +72,11 @@ pub fn from_json(input: &Path, output: &Path, overwrite: bool) -> anyhow::Result
     };
 
     let mut writer = BufWriter::new(output_file);
-    uesave::Context::run_with_types(&get_tower_types(), &mut writer, |ctx| save.write(ctx))?;
+    uesave::Context::run_with_types(&get_tower_types(), &mut writer, |ctx| save.write(ctx))
+        .map_err(|e| uesave::ParseError {
+            offset: writer.stream_position().unwrap() as usize, // our own implemenation which cannot fail
+            error: e,
+        })?;
 
     Ok(())
 }
