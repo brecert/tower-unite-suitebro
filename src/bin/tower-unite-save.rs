@@ -82,10 +82,32 @@ pub fn from_json(input: &Path, output: &Path, overwrite: bool) -> anyhow::Result
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
+/// Checks to see if a file can be parsed
+#[argh(subcommand, name = "check")]
+pub struct CheckArgs {
+    /// save file to check
+    #[argh(option, short = 'i')]
+    input: PathBuf,
+}
+
+pub fn check(input: &Path) -> anyhow::Result<()> {
+    let input_file = File::open(input)?;
+    let mut reader = BufReader::new(input_file);
+    let mut reader = SeekReader::new(&mut reader);
+    let _ = uesave::Context::run_with_types(&get_tower_types(), &mut reader, SuiteBro::read)
+        .map_err(|e| uesave::ParseError {
+            offset: reader.stream_position().unwrap() as usize, // our own implemenation which cannot fail
+            error: e,
+        })?;
+    Ok(())
+}
+
+#[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 enum SubCommand {
     ToJSON(ToJSONArgs),
     ToSave(ToSaveArgs),
+    Check(CheckArgs),
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -101,5 +123,6 @@ pub fn main() -> anyhow::Result<()> {
     match args.subcommand {
         SubCommand::ToJSON(args) => to_json(&args.input, &args.output, args.overwrite),
         SubCommand::ToSave(args) => from_json(&args.input, &args.output, args.overwrite),
+        SubCommand::Check(args) => check(&args.input),
     }
 }

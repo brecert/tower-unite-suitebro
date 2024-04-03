@@ -25,9 +25,15 @@ impl<R: Read + Seek> Readable<R> for SuiteBro {
         let items = read_array(item_count, reader, Item::read)?;
         let property_count = reader.read_u32::<LE>()?;
         let properties = read_array(property_count, reader, PropertyList::read)?;
-        let _unknown_count = reader.read_u32::<LE>();
-        let group_count = reader.read_u32::<LE>()?;
-        let groups = read_array(group_count, reader, GroupInfo::read)?;
+        let _unknown_count = reader.read_u32::<LE>()?;
+        
+        // todo: maybe `None` in the future
+        let groups = if header.format_version >= 517 {
+            let group_count = reader.read_u32::<LE>()?;
+            read_array(group_count, reader, GroupInfo::read)?
+        } else {
+            vec![]
+        };
 
         Ok(Self {
             header,

@@ -168,6 +168,8 @@ namespace gvas {
                 | "LaserProjectionIndex"
                 | "NPCWearables"
                 | "PostProcessVolumeSettings"
+                | "FogVolumeSettings"
+                | "SkyVolumeSettings"
                 ): PropertyMap;
                 // unknown
                 (_): {
