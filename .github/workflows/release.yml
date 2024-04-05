@@ -45,6 +45,7 @@ jobs:
 
     env:
       artifact: ./target/${{ matrix.target }}/release/tower-unite-save${{ matrix.ext }}
+      release_name: tower-unite-save-${{ matrix.target }}${{ matrix.ext }}
 
     steps:
       - uses: actions/checkout@v4.1.2
@@ -60,10 +61,13 @@ jobs:
       - name: Build Project
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Rename Binary
+        run: mv "${{ env.artifact }}" "${{ env.release_name }}"
+
       - name: Create Release Draft
         uses: softprops/action-gh-release@v2.0.4
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           draft: true
-          files: ${{ env.artifact }}
+          files: ${{ env.release_name }}
           generate_release_notes: true
